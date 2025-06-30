@@ -1,0 +1,12 @@
+name: MapSync
+version: 1.0
+main: de.flattze.mapsync.MapSyncPlugin
+api-version: 1.20
+author: Flattze
+commands:
+  mapsync:
+    description: Öffnet das Karten-GUI
+permissions:
+  mapsync.admin:
+    description: Erlaubt Adminfunktionen im Karten-GUI
+    default: op
