@@ -37,13 +37,14 @@ public class MapGUIManager {
     public void openOwnedMaps(Player player, int page) {
         List<MapRecord> records = plugin.getDatabaseManager().getMapsFor(player.getUniqueId());
 
-        int itemsPerPage = 45; // 5 Zeilen à 9 Slots
+        int itemsPerPage = 45; // 5 Zeilen
         int maxPage = (int) Math.ceil((double) records.size() / itemsPerPage);
 
+        if (maxPage < 1) maxPage = 1; // nie 0
         if (page < 1) page = 1;
         if (page > maxPage) page = maxPage;
 
-        Inventory inv = plugin.getServer().createInventory(null, 54, "§7Meine Karten - Seite " + page);
+        Inventory inv = Bukkit.createInventory(null, 54, "§7Meine Karten - Seite " + page);
 
         int startIndex = (page - 1) * itemsPerPage;
         int endIndex = Math.min(startIndex + itemsPerPage, records.size());
@@ -60,25 +61,26 @@ public class MapGUIManager {
             inv.setItem(slot++, mapItem);
         }
 
-        // Navigation Buttons
+        // Navigation
         if (page > 1) {
             ItemStack prev = new ItemStack(Material.ARROW);
-            ItemMeta meta = prev.getItemMeta();
-            meta.setDisplayName("§eVorherige Seite");
-            prev.setItemMeta(meta);
+            ItemMeta prevMeta = prev.getItemMeta();
+            prevMeta.setDisplayName("§eVorherige Seite");
+            prev.setItemMeta(prevMeta);
             inv.setItem(45, prev);
         }
 
         if (page < maxPage) {
             ItemStack next = new ItemStack(Material.ARROW);
-            ItemMeta meta = next.getItemMeta();
-            meta.setDisplayName("§eNächste Seite");
-            next.setItemMeta(meta);
+            ItemMeta nextMeta = next.getItemMeta();
+            nextMeta.setDisplayName("§eNächste Seite");
+            next.setItemMeta(nextMeta);
             inv.setItem(53, next);
         }
-
-        player.openInventory(inv);
+        plugin.getLogger().info("Öffne GUI mit " + records.size() + " Karten, Seite: " + page);
+        player.openInventory(inv); // ✅ Ohne das öffnet sich nichts!
     }
+
 
     public void uploadCurrentMap(Player player) {
         ItemStack item = player.getInventory().getItemInMainHand();
