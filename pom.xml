@@ -28,13 +28,6 @@
 
   <dependencies>
     <dependency>
-      <groupId>me.william278</groupId>
-      <artifactId>mapdataapi</artifactId>
-      <version>2.0</version>
-      <scope>system</scope>
-      <systemPath>${project.basedir}/libs/MapDataAPI-2.0.jar</systemPath>
-    </dependency>
-    <dependency>
       <groupId>io.papermc.paper</groupId>
       <artifactId>paper-api</artifactId>
       <version>1.20.6-R0.1-SNAPSHOT</version>

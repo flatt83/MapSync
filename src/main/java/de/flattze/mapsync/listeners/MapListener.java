@@ -83,12 +83,15 @@ public class MapListener implements Listener {
 
             MapView mapView = Bukkit.createMap(player.getWorld());
             mapView.getRenderers().clear();
-            mapView.addRenderer(new CustomMapRenderer(record.mapData()));
+            mapView.addRenderer(new CustomMapRenderer(record.mapData())); // NEU: deine Farben!
+
+            mapView.setTrackingPosition(false);
+            mapView.setLocked(true);
 
             ItemStack mapItem = new ItemStack(Material.FILLED_MAP);
             MapMeta meta = (MapMeta) mapItem.getItemMeta();
-            meta.setDisplayName("§aKopie von Karte " + mapId);
             meta.setMapView(mapView);
+            meta.setDisplayName("§aKopie von Karte " + mapId);
             mapItem.setItemMeta(meta);
 
             player.getInventory().addItem(mapItem);
