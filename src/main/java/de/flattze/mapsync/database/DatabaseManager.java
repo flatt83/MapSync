@@ -18,33 +18,29 @@ public class DatabaseManager {
     }
 
     public void connect() {
+        String host = plugin.getConfig().getString("database.host");
+        int port = plugin.getConfig().getInt("database.port");
+        String database = plugin.getConfig().getString("database.database");
+        String username = plugin.getConfig().getString("database.username");
+        String password = plugin.getConfig().getString("database.password");
+
+        String url = "jdbc:mysql://" + host + ":" + port + "/" + database + "?useSSL=false";
         try {
-            String url = "jdbc:mysql://" + plugin.getConfig().getString("database.host")
-                    + ":" + plugin.getConfig().getInt("database.port")
-                    + "/" + plugin.getConfig().getString("database.database")
-                    + "?useSSL=false&autoReconnect=true";
-
-            String user = plugin.getConfig().getString("database.username");
-            String pass = plugin.getConfig().getString("database.password");
-
-            this.connection = DriverManager.getConnection(url, user, pass);
-            plugin.getLogger().info("[MapSync] Verbindung zur Datenbank hergestellt.");
-
-            checkAndCreateTable();
-
+            connection = DriverManager.getConnection(url, username, password);
+            plugin.getLogger().info("Datenbank verbunden!");
         } catch (SQLException e) {
-            plugin.getLogger().severe("[MapSync] Fehler bei DB-Verbindung: " + e.getMessage());
+            plugin.getLogger().severe("DB-Verbindung fehlgeschlagen: " + e.getMessage());
         }
     }
 
     public void disconnect() {
-        try {
-            if (connection != null && !connection.isClosed()) {
+        if (connection != null) {
+            try {
                 connection.close();
-                plugin.getLogger().info("[MapSync] Datenbank-Verbindung geschlossen.");
+                plugin.getLogger().info("DB-Verbindung getrennt.");
+            } catch (SQLException e) {
+                e.printStackTrace();
             }
-        } catch (SQLException e) {
-            plugin.getLogger().severe("[MapSync] Fehler beim Schließen: " + e.getMessage());
         }
     }
 
@@ -70,47 +66,26 @@ public class DatabaseManager {
         }
     }
 
-    public void uploadMap(MapRecord map) {
-        try {
-            if (map.colors().length != 16384) {
-                throw new IllegalArgumentException("uploadMap: Farben müssen 16384 Bytes sein!");
-            }
+    public void uploadMap(MapRecord record) {
+        String sql = "INSERT INTO mapsync_maps " +
+                "(map_id, owner_uuid, owner_name, dimension, scale, center_x, center_z, locked, tracking, map_data) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+                "ON DUPLICATE KEY UPDATE owner_name = VALUES(owner_name), map_data = VALUES(map_data)";
 
-            PreparedStatement stmt = connection.prepareStatement("""
-                INSERT INTO maps (
-                    map_id, owner_uuid, owner_name, dimension, scale,
-                    center_x, center_z, locked, tracking_position, colors
-                )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ON DUPLICATE KEY UPDATE
-                    owner_uuid = VALUES(owner_uuid),
-                    owner_name = VALUES(owner_name),
-                    dimension = VALUES(dimension),
-                    scale = VALUES(scale),
-                    center_x = VALUES(center_x),
-                    center_z = VALUES(center_z),
-                    locked = VALUES(locked),
-                    tracking_position = VALUES(tracking_position),
-                    colors = VALUES(colors)
-            """);
-
-            stmt.setInt(1, map.mapId());
-            stmt.setString(2, map.ownerUuid().toString());
-            stmt.setString(3, map.ownerName());
-            stmt.setString(4, map.dimension());
-            stmt.setInt(5, map.scale());
-            stmt.setInt(6, map.centerX());
-            stmt.setInt(7, map.centerZ());
-            stmt.setBoolean(8, map.locked());
-            stmt.setBoolean(9, map.trackingPosition());
-            stmt.setBytes(10, map.colors());
-
-            stmt.executeUpdate();
-
-            plugin.getLogger().info("[MapSync] Karte " + map.mapId() + " gespeichert.");
-
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, record.mapId());
+            ps.setString(2, record.owner().toString());
+            ps.setString(3, record.ownerName());
+            ps.setString(4, record.dimension());
+            ps.setInt(5, record.scale());
+            ps.setInt(6, record.centerX());
+            ps.setInt(7, record.centerZ());
+            ps.setBoolean(8, record.locked());
+            ps.setBoolean(9, record.tracking());
+            ps.setBytes(10, record.mapData());
+            ps.executeUpdate();
         } catch (SQLException e) {
-            plugin.getLogger().severe("[MapSync] Fehler bei uploadMap: " + e.getMessage());
+            plugin.getLogger().severe("Upload fehlgeschlagen: " + e.getMessage());
         }
     }
 

@@ -32,7 +32,7 @@ public class MapExtractor {
             byte[] colors = colorsTag.getValue();
 
             if (colors.length != 16384) {
-                throw new IllegalArgumentException("Farben sind nicht 16384 Bytes!");
+                throw new IllegalArgumentException("Farben müssen 16384 Bytes haben!");
             }
 
             return colors;

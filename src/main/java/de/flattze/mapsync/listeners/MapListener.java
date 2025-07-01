@@ -15,8 +15,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.MapMeta;
 import org.bukkit.map.MapView;
 
-import java.util.zip.GZIPInputStream;
-
 public class MapListener implements Listener {
 
     private final MapSyncPlugin plugin;
@@ -77,9 +75,6 @@ public class MapListener implements Listener {
                 return;
             }
 
-            // Debug-Log für Länge
-            player.sendMessage("§7Datenlänge: " + record.colors().length);
-
             if (player.getInventory().firstEmpty() == -1) {
                 player.sendMessage("§cDein Inventar ist voll.");
                 player.closeInventory();
@@ -88,7 +83,7 @@ public class MapListener implements Listener {
 
             MapView mapView = Bukkit.createMap(player.getWorld());
             mapView.getRenderers().clear();
-            mapView.addRenderer(new CustomMapRenderer(record.colors()));
+            mapView.addRenderer(new CustomMapRenderer(record.mapData()));
 
             ItemStack mapItem = new ItemStack(Material.FILLED_MAP);
             MapMeta meta = (MapMeta) mapItem.getItemMeta();
@@ -100,7 +95,6 @@ public class MapListener implements Listener {
             player.sendMessage("§aKarte " + mapId + " wurde deinem Inventar hinzugefügt.");
             player.closeInventory();
         }
-
     }
 
     @EventHandler
@@ -114,5 +108,4 @@ public class MapListener implements Listener {
             event.setCancelled(true);
         }
     }
-
 }
