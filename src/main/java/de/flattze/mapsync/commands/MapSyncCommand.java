@@ -29,7 +29,10 @@ public class MapSyncCommand implements CommandExecutor {
         switch (args[0].toLowerCase()) {
             case "upload" -> plugin.getGuiManager().uploadCurrentMap(player);
             case "gui" -> plugin.getGuiManager().openPlayerMapGUI(player);
-            case "mymaps" -> plugin.getGuiManager().openOwnedMaps(player, 1);
+            case "mymaps" -> {
+                plugin.getLogger().info("Rufe UI auf!");
+                plugin.getGuiManager().openOwnedMaps(player, 1);
+            }
             default -> player.sendMessage("§cUnbekannter Subbefehl.");
         }
         return true;

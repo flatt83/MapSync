@@ -28,6 +28,7 @@ public class DatabaseManager {
         try {
             connection = DriverManager.getConnection(url, username, password);
             plugin.getLogger().info("Datenbank verbunden!");
+            checkAndCreateTable();
         } catch (SQLException e) {
             plugin.getLogger().severe("DB-Verbindung fehlgeschlagen: " + e.getMessage());
         }
@@ -47,7 +48,7 @@ public class DatabaseManager {
     public void checkAndCreateTable() {
         try (Statement stmt = connection.createStatement()) {
             stmt.executeUpdate("""
-                CREATE TABLE IF NOT EXISTS maps (
+                CREATE TABLE IF NOT EXISTS mapsync_maps (
                   map_id INT PRIMARY KEY,
                   owner_uuid VARCHAR(36) NOT NULL,
                   owner_name VARCHAR(100) NOT NULL,
@@ -56,7 +57,7 @@ public class DatabaseManager {
                   center_x INT NOT NULL,
                   center_z INT NOT NULL,
                   locked BOOLEAN NOT NULL,
-                  tracking_position BOOLEAN NOT NULL,
+                  tracking BOOLEAN NOT NULL,
                   colors BLOB NOT NULL
                 )
             """);

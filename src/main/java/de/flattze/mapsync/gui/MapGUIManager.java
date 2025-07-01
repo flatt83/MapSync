@@ -2,7 +2,6 @@ package de.flattze.mapsync.gui;
 
 import de.flattze.mapsync.MapSyncPlugin;
 import de.flattze.mapsync.data.MapRecord;
-import de.flattze.mapsync.util.MapMigrateUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
