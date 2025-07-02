@@ -1,13 +1,11 @@
+
 package de.flattze.mapsync;
 
 import de.flattze.mapsync.database.DatabaseManager;
 import de.flattze.mapsync.extractor.MapExtractor;
 import de.flattze.mapsync.gui.MapGUIManager;
 import de.flattze.mapsync.listeners.MapListener;
-import de.flattze.mapsync.commands.MapSyncCommand;
 import org.bukkit.plugin.java.JavaPlugin;
-
-import java.util.Objects;
 
 public class MapSyncPlugin extends JavaPlugin {
 
@@ -21,10 +19,10 @@ public class MapSyncPlugin extends JavaPlugin {
 
         this.databaseManager = new DatabaseManager(this);
         this.databaseManager.connect();
+        this.databaseManager.ensureTableExists();
 
         this.mapExtractor = new MapExtractor();
         this.guiManager = new MapGUIManager(this);
-        Objects.requireNonNull(getCommand("mapsync")).setExecutor(new MapSyncCommand(this));
 
         getServer().getPluginManager().registerEvents(new MapListener(this), this);
 
@@ -50,4 +48,3 @@ public class MapSyncPlugin extends JavaPlugin {
         return guiManager;
     }
 }
-
