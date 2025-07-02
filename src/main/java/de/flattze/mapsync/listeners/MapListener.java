@@ -61,43 +61,30 @@ public class MapListener implements Listener {
         }
 
         if (clicked.getType() == Material.FILLED_MAP) {
-            int mapId;
-            try {
-                mapId = Integer.parseInt(clicked.getItemMeta().getDisplayName().replace("§aKarte ID: ", ""));
-            } catch (NumberFormatException e) {
-                player.sendMessage("§cUngültige Karten-ID.");
-                return;
-            }
-
+            int mapId = Integer.parseInt(clicked.getItemMeta().getDisplayName().replace("§aKarte ID: ", ""));
             MapRecord record = plugin.getDatabaseManager().getMapById(mapId);
             if (record == null) {
-                player.sendMessage("§cKarte nicht gefunden.");
+                player.sendMessage("§cNicht gefunden!");
                 return;
             }
 
-            if (player.getInventory().firstEmpty() == -1) {
-                player.sendMessage("§cDein Inventar ist voll.");
-                player.closeInventory();
-                return;
-            }
+            MapView view = Bukkit.createMap(player.getWorld());
+            view.getRenderers().clear();
+            view.addRenderer(new CustomMapRenderer(record.mapData()));
+            view.setTrackingPosition(false);
+            view.setLocked(true);
 
-            MapView mapView = Bukkit.createMap(player.getWorld());
-            mapView.getRenderers().clear();
-            mapView.addRenderer(new CustomMapRenderer(record.mapData())); // NEU: deine Farben!
+            ItemStack newMap = new ItemStack(Material.FILLED_MAP);
+            MapMeta meta = (MapMeta) newMap.getItemMeta();
+            meta.setMapView(view);
+            meta.setDisplayName("§aKopie von " + mapId);
+            newMap.setItemMeta(meta);
 
-            mapView.setTrackingPosition(false);
-            mapView.setLocked(true);
-
-            ItemStack mapItem = new ItemStack(Material.FILLED_MAP);
-            MapMeta meta = (MapMeta) mapItem.getItemMeta();
-            meta.setMapView(mapView);
-            meta.setDisplayName("§aKopie von Karte " + mapId);
-            mapItem.setItemMeta(meta);
-
-            player.getInventory().addItem(mapItem);
-            player.sendMessage("§aKarte " + mapId + " wurde deinem Inventar hinzugefügt.");
+            player.getInventory().addItem(newMap);
+            player.sendMessage("§aKarte hinzugefügt!");
             player.closeInventory();
         }
+
     }
 
     @EventHandler

@@ -35,49 +35,23 @@ public class MapGUIManager {
 
     public void openOwnedMaps(Player player, int page) {
         List<MapRecord> records = plugin.getDatabaseManager().getMapsFor(player.getUniqueId());
-
-        int itemsPerPage = 45; // 5 Zeilen
-        int maxPage = (int) Math.ceil((double) records.size() / itemsPerPage);
-
-        if (maxPage < 1) maxPage = 1; // nie 0
-        if (page < 1) page = 1;
-        if (page > maxPage) page = maxPage;
+        if (records.isEmpty()) {
+            player.sendMessage("§cKeine Karten gefunden.");
+            return;
+        }
 
         Inventory inv = Bukkit.createInventory(null, 54, "§7Meine Karten - Seite " + page);
 
-        int startIndex = (page - 1) * itemsPerPage;
-        int endIndex = Math.min(startIndex + itemsPerPage, records.size());
-
         int slot = 0;
-        for (int i = startIndex; i < endIndex; i++) {
-            MapRecord record = records.get(i);
-
-            ItemStack mapItem = new ItemStack(Material.FILLED_MAP);
-            ItemMeta meta = mapItem.getItemMeta();
+        for (MapRecord record : records) {
+            ItemStack item = new ItemStack(Material.FILLED_MAP);
+            ItemMeta meta = item.getItemMeta();
             meta.setDisplayName("§aKarte ID: " + record.mapId());
-            mapItem.setItemMeta(meta);
-
-            inv.setItem(slot++, mapItem);
+            item.setItemMeta(meta);
+            inv.setItem(slot++, item);
         }
 
-        // Navigation
-        if (page > 1) {
-            ItemStack prev = new ItemStack(Material.ARROW);
-            ItemMeta prevMeta = prev.getItemMeta();
-            prevMeta.setDisplayName("§eVorherige Seite");
-            prev.setItemMeta(prevMeta);
-            inv.setItem(45, prev);
-        }
-
-        if (page < maxPage) {
-            ItemStack next = new ItemStack(Material.ARROW);
-            ItemMeta nextMeta = next.getItemMeta();
-            nextMeta.setDisplayName("§eNächste Seite");
-            next.setItemMeta(nextMeta);
-            inv.setItem(53, next);
-        }
-        plugin.getLogger().info("Öffne GUI mit " + records.size() + " Karten, Seite: " + page);
-        player.openInventory(inv); // ✅ Ohne das öffnet sich nichts!
+        player.openInventory(inv);
     }
 
 
