@@ -34,11 +34,8 @@ public class MapListener implements Listener {
         if (clickedInv == null) return;
 
         boolean clickInMenu = clickedInv.equals(event.getView().getTopInventory());
-        if (clickInMenu) {
-            event.setCancelled(true);
-        } else {
-            return;
-        }
+        if (clickInMenu) event.setCancelled(true);
+        else return;
 
         ItemStack clicked = event.getCurrentItem();
         if (clicked == null || clicked.getType() == Material.AIR) return;
@@ -61,13 +58,26 @@ public class MapListener implements Listener {
         }
 
         if (clicked.getType() == Material.FILLED_MAP) {
-            int mapId = Integer.parseInt(clicked.getItemMeta().getDisplayName().replace("§aKarte ID: ", ""));
-            MapRecord record = plugin.getDatabaseManager().getMapById(mapId);
-            if (record == null) {
-                player.sendMessage("§cNicht gefunden!");
+            int mapId;
+            try {
+                mapId = Integer.parseInt(clicked.getItemMeta().getDisplayName().replace("§aKarte ID: ", ""));
+            } catch (NumberFormatException e) {
+                player.sendMessage("§cUngültige Karten-ID.");
                 return;
             }
 
+            MapRecord record = plugin.getDatabaseManager().getMapById(mapId);
+            if (record == null) {
+                player.sendMessage("§cKarte nicht gefunden!");
+                return;
+            }
+
+            if (player.getInventory().firstEmpty() == -1) {
+                player.sendMessage("§cDein Inventar ist voll!");
+                return;
+            }
+
+            // Neues MapView + Renderer
             MapView view = Bukkit.createMap(player.getWorld());
             view.getRenderers().clear();
             view.addRenderer(new CustomMapRenderer(record.mapData()));
@@ -76,20 +86,19 @@ public class MapListener implements Listener {
 
             ItemStack newMap = new ItemStack(Material.FILLED_MAP);
             MapMeta meta = (MapMeta) newMap.getItemMeta();
+            meta.setDisplayName("§aKopie von Karte " + mapId);
             meta.setMapView(view);
-            meta.setDisplayName("§aKopie von " + mapId);
             newMap.setItemMeta(meta);
 
             player.getInventory().addItem(newMap);
-            player.sendMessage("§aKarte hinzugefügt!");
+            player.sendMessage("§aKarte wurde deinem Inventar hinzugefügt!");
             player.closeInventory();
         }
-
     }
 
     @EventHandler
     public void onInventoryDrag(InventoryDragEvent event) {
-        if (!(event.getWhoClicked() instanceof Player)) return;
+        if (!(event.getWhoClicked() instanceof Player player)) return;
 
         String title = event.getView().getTitle();
         if (!title.startsWith("§7Meine Karten")) return;

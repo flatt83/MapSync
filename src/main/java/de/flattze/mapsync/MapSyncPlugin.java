@@ -22,8 +22,8 @@ public class MapSyncPlugin extends JavaPlugin {
         this.databaseManager.connect();
         this.databaseManager.ensureTableExists();
 
-        this.mapExtractor = new MapExtractor();
         this.guiManager = new MapGUIManager(this);
+        this.mapExtractor = new MapExtractor();
 
         getServer().getPluginManager().registerEvents(new MapListener(this), this);
 
@@ -31,6 +31,7 @@ public class MapSyncPlugin extends JavaPlugin {
 
         getLogger().info("MapSync gestartet!");
     }
+
 
     @Override
     public void onDisable() {

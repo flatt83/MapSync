@@ -2,6 +2,7 @@ package de.flattze.mapsync.commands;
 
 import de.flattze.mapsync.MapSyncPlugin;
 import de.flattze.mapsync.data.MapRecord;
+import de.flattze.mapsync.extractor.MapExtractor;
 import de.flattze.mapsync.renderer.CustomMapRenderer;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
@@ -24,49 +25,56 @@ public class MapSyncCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage("§cNur Spieler können diesen Befehl verwenden.");
+            sender.sendMessage("Nur Spieler können diesen Befehl nutzen!");
             return true;
         }
 
         if (args.length == 0) {
-            player.sendMessage("§7Verfügbare Befehle: /mapsync upload | gui | migrate | mymaps");
+            player.sendMessage("Verfügbare Befehle: upload | mymaps");
             return true;
         }
 
         switch (args[0].toLowerCase()) {
             case "upload" -> {
-                player.sendMessage("§cStarte den Upload-Prozess!");
+                plugin.getLogger().info("[MapSync] Starte Upload-Prozess...");
+
                 ItemStack item = player.getInventory().getItemInMainHand();
                 if (item.getType() != Material.FILLED_MAP) {
                     player.sendMessage("§cDu musst eine FILLED_MAP in der Hand halten!");
                     return true;
                 }
-                player.sendMessage("§c1!");
+
                 MapMeta meta = (MapMeta) item.getItemMeta();
                 MapView view = meta.getMapView();
                 if (view == null) {
-                    player.sendMessage("§cKeine MapView gefunden.");
+                    player.sendMessage("§cKeine MapView gefunden!");
                     return true;
                 }
-                player.sendMessage("§c2!");
-                // Hole deinen Renderer
-                CustomMapRenderer myRenderer = null;
+
+                byte[] colors = null;
+
+                // 1) Prüfe auf CustomMapRenderer
                 for (MapRenderer renderer : view.getRenderers()) {
                     if (renderer instanceof CustomMapRenderer custom) {
-                        myRenderer = custom;
+                        colors = custom.getColors();
+                        plugin.getLogger().info("[MapSync] CustomRenderer gefunden.");
                         break;
                     }
                 }
-                player.sendMessage("§c3!");
-                if (myRenderer == null) {
-                    player.sendMessage("§cDie Karte wurde nicht mit MapSync erstellt! Kein CustomRenderer gefunden.");
+
+                // 2) Fallback auf map_<id>.dat
+                if (colors == null) {
+                    plugin.getLogger().info("[MapSync] Kein CustomRenderer → Fallback auf .dat");
+                    MapExtractor extractor = plugin.getMapExtractor();
+                    colors = extractor.extractColors(view.getId(), player.getWorld());
+                }
+
+                if (colors == null || colors.length != 16384) {
+                    player.sendMessage("§cFarben konnten nicht gelesen werden! Abbruch.");
                     return true;
                 }
-                player.sendMessage("§c4!");
-                byte[] colors = myRenderer.getColors();
-                player.sendMessage("§7Farbenlänge: " + colors.length);
-                player.sendMessage("§c5!");
-                // Speichern
+
+                // MapRecord bauen & speichern
                 MapRecord record = new MapRecord(
                         view.getId(),
                         player.getUniqueId(),
@@ -75,23 +83,22 @@ public class MapSyncCommand implements CommandExecutor {
                         view.getScale().getValue(),
                         view.getCenterX(),
                         view.getCenterZ(),
-                        view.isLocked(),
-                        view.isTrackingPosition(),
+                        true,
+                        false,
                         colors
                 );
-                player.sendMessage("§c6!");
+
                 plugin.getDatabaseManager().uploadMap(record);
-                player.sendMessage("§aUpload abgeschlossen!");
+                player.sendMessage("§aKarte erfolgreich hochgeladen! ID: " + view.getId());
             }
 
-
-            case "gui" -> plugin.getGuiManager().openPlayerMapGUI(player);
             case "mymaps" -> {
-                plugin.getLogger().info("Rufe UI auf!");
                 plugin.getGuiManager().openOwnedMaps(player, 1);
             }
-            default -> player.sendMessage("§cUnbekannter Subbefehl.");
+
+            default -> player.sendMessage("Unbekannter Befehl.");
         }
+
         return true;
     }
 }

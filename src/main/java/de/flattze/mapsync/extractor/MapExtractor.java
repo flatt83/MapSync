@@ -4,7 +4,6 @@ import com.flowpowered.nbt.ByteArrayTag;
 import com.flowpowered.nbt.CompoundTag;
 import com.flowpowered.nbt.Tag;
 import com.flowpowered.nbt.stream.NBTInputStream;
-import org.bukkit.Bukkit;
 import org.bukkit.World;
 
 import java.io.File;
@@ -15,31 +14,31 @@ import java.util.Map;
 public class MapExtractor {
 
     public byte[] extractColors(int mapId, World world) {
-        File mapFile = new File(world.getWorldFolder(), "data/map_" + mapId + ".dat");
-        if (!mapFile.exists()) {
-            Bukkit.getLogger().warning("[MapSync] map_" + mapId + ".dat nicht gefunden.");
-            return new byte[16384];
+        File file = new File(world.getWorldFolder(), "data/map_" + mapId + ".dat");
+        if (!file.exists()) {
+            System.out.println("[MapSync] map_" + mapId + ".dat nicht gefunden");
+            return null;
         }
 
-        try (NBTInputStream nbtIn = new NBTInputStream(new FileInputStream(mapFile))) {
+        try (NBTInputStream nbtIn = new NBTInputStream(new FileInputStream(file))) {
             CompoundTag rootTag = (CompoundTag) nbtIn.readTag();
-            Map<String, Tag<?>> rootMap = rootTag.getValue();
+            Map<String, Tag<?>> root = rootTag.getValue();
 
-            CompoundTag dataTag = (CompoundTag) rootMap.get("data");
-            Map<String, Tag<?>> dataMap = dataTag.getValue();
+            CompoundTag dataTag = (CompoundTag) root.get("data");
+            Map<String, Tag<?>> data = dataTag.getValue();
 
-            ByteArrayTag colorsTag = (ByteArrayTag) dataMap.get("colors");
+            ByteArrayTag colorsTag = (ByteArrayTag) data.get("colors");
             byte[] colors = colorsTag.getValue();
 
             if (colors.length != 16384) {
-                throw new IllegalArgumentException("Farben müssen 16384 Bytes sein!");
+                throw new IllegalArgumentException("Farben müssen 16384 Bytes sein! Tatsächlich: " + colors.length);
             }
 
             return colors;
 
         } catch (IOException e) {
             e.printStackTrace();
+            return null;
         }
-        return new byte[16384];
     }
 }

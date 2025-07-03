@@ -69,34 +69,31 @@ public class DatabaseManager {
 
     public void uploadMap(MapRecord record) {
         if (record.mapData().length != 16384) {
-            throw new IllegalArgumentException("Farben müssen 16384 Bytes sein!");
+            throw new IllegalArgumentException("uploadMap: Farben müssen 16384 Bytes sein!");
         }
 
-        String sql = """
-                INSERT INTO mapsync_maps (map_id, owner_uuid, owner_name, dimension, scale, center_x, center_z, locked, tracking, map_data)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ON DUPLICATE KEY UPDATE
-                  owner_name=VALUES(owner_name),
-                  map_data=VALUES(map_data)
-                """;
-
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setInt(1, record.mapId());
-            ps.setString(2, record.owner().toString());
-            ps.setString(3, record.ownerName());
-            ps.setString(4, record.dimension());
-            ps.setInt(5, record.scale());
-            ps.setInt(6, record.centerX());
-            ps.setInt(7, record.centerZ());
-            ps.setBoolean(8, record.locked());
-            ps.setBoolean(9, record.tracking());
-            ps.setBytes(10, record.mapData());
-
-            ps.executeUpdate();
+        try (Connection conn = getConnection()) {
+            PreparedStatement stmt = conn.prepareStatement(
+                    "REPLACE INTO mapsync_maps " +
+                            "(map_id, owner_uuid, owner_name, dimension, scale, center_x, center_z, locked, tracking, map_data) " +
+                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+            );
+            stmt.setInt(1, record.mapId());
+            stmt.setString(2, record.owner());
+            stmt.setString(3, record.ownerName());
+            stmt.setString(4, record.dimension());
+            stmt.setInt(5, record.scale());
+            stmt.setInt(6, record.centerX());
+            stmt.setInt(7, record.centerZ());
+            stmt.setBoolean(8, record.locked());
+            stmt.setBoolean(9, record.tracking());
+            stmt.setBytes(10, record.mapData());
+            stmt.executeUpdate();
         } catch (SQLException e) {
-            plugin.getLogger().severe("Upload fehlgeschlagen: " + e.getMessage());
+            e.printStackTrace();
         }
     }
+
 
     public List<MapRecord> getMapsFor(UUID owner) {
         List<MapRecord> result = new ArrayList<>();
