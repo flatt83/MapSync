@@ -8,6 +8,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import static java.sql.DriverManager.getConnection;
+
+
 public class DatabaseManager {
 
     private final MapSyncPlugin plugin;
@@ -26,7 +29,7 @@ public class DatabaseManager {
 
         String url = "jdbc:mysql://" + host + ":" + port + "/" + database + "?useSSL=false";
         try {
-            connection = DriverManager.getConnection(url, username, password);
+            connection = getConnection(url, username, password);
             plugin.getLogger().info("Datenbank verbunden!");
         } catch (SQLException e) {
             plugin.getLogger().severe("DB-Verbindung fehlgeschlagen: " + e.getMessage());
@@ -72,14 +75,14 @@ public class DatabaseManager {
             throw new IllegalArgumentException("uploadMap: Farben müssen 16384 Bytes sein!");
         }
 
-        try (Connection conn = getConnection()) {
+        try (Connection conn = connection) {
             PreparedStatement stmt = conn.prepareStatement(
                     "REPLACE INTO mapsync_maps " +
                             "(map_id, owner_uuid, owner_name, dimension, scale, center_x, center_z, locked, tracking, map_data) " +
                             "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
             );
             stmt.setInt(1, record.mapId());
-            stmt.setString(2, record.owner());
+            stmt.setString(2, String.valueOf(record.owner()));
             stmt.setString(3, record.ownerName());
             stmt.setString(4, record.dimension());
             stmt.setInt(5, record.scale());
@@ -93,7 +96,6 @@ public class DatabaseManager {
             e.printStackTrace();
         }
     }
-
 
     public List<MapRecord> getMapsFor(UUID owner) {
         List<MapRecord> result = new ArrayList<>();
