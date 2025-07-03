@@ -1,6 +1,7 @@
 
 package de.flattze.mapsync;
 
+import de.flattze.mapsync.commands.MapSyncCommand;
 import de.flattze.mapsync.database.DatabaseManager;
 import de.flattze.mapsync.extractor.MapExtractor;
 import de.flattze.mapsync.gui.MapGUIManager;
@@ -25,6 +26,8 @@ public class MapSyncPlugin extends JavaPlugin {
         this.guiManager = new MapGUIManager(this);
 
         getServer().getPluginManager().registerEvents(new MapListener(this), this);
+
+        getCommand("mapsync").setExecutor(new MapSyncCommand(this));
 
         getLogger().info("MapSync gestartet!");
     }

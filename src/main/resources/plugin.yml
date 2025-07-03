@@ -5,7 +5,9 @@ api-version: 1.20
 author: Flattze
 commands:
   mapsync:
-    description: Öffnet das Karten-GUI
+    description: Hauptbefehl für MapSync
+    usage: /mapsync <upload|mymaps|...>
+
 permissions:
   mapsync.admin:
     description: Erlaubt Adminfunktionen im Karten-GUI
