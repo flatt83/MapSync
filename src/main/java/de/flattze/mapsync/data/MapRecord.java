@@ -13,4 +13,4 @@ public record MapRecord(
         boolean locked,
         boolean tracking,
         byte[] mapData
-) { }
+) {}

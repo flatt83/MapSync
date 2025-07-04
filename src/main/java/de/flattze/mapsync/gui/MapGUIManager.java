@@ -74,7 +74,6 @@ public class MapGUIManager {
 
     public void giveMapToPlayer(Player player, MapRecord record) {
         MapView view = Bukkit.createMap(player.getWorld());
-
         view.setScale(MapView.Scale.values()[Math.max(0, Math.min(record.scale(), 4))]);
         view.setCenterX(record.centerX());
         view.setCenterZ(record.centerZ());
@@ -91,4 +90,5 @@ public class MapGUIManager {
 
         player.getInventory().addItem(mapItem);
     }
+
 }

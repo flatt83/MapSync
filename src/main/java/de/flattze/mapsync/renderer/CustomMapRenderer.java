@@ -4,9 +4,14 @@ import org.bukkit.map.MapCanvas;
 import org.bukkit.map.MapRenderer;
 import org.bukkit.map.MapView;
 
+import de.flattze.mapsync.MapSyncPlugin;
+
+import static org.bukkit.Bukkit.getLogger;
+
 public class CustomMapRenderer extends MapRenderer {
 
     private final byte[] colors;
+
 
     public CustomMapRenderer(byte[] colors) {
         super(true);

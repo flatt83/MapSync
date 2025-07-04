@@ -64,6 +64,7 @@ public class DatabaseManager {
         if (record.mapData().length != 16384) {
             throw new IllegalArgumentException("Farben müssen 16384 Bytes sein!");
         }
+
         try (Connection conn = getConnection()) {
             PreparedStatement stmt = conn.prepareStatement(
                     "REPLACE INTO mapsync_maps " +
@@ -81,11 +82,11 @@ public class DatabaseManager {
             stmt.setBoolean(9, record.tracking());
             stmt.setBytes(10, record.mapData());
             stmt.executeUpdate();
-            plugin.getLogger().info("[MapSync] Map-ID " + record.mapId() + " gespeichert.");
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
+
 
     public MapRecord getMapById(int mapId) {
         try (Connection conn = getConnection()) {
@@ -113,6 +114,7 @@ public class DatabaseManager {
         }
         return null;
     }
+
 
     public List<MapRecord> getMapsFor(UUID owner) {
         List<MapRecord> list = new ArrayList<>();

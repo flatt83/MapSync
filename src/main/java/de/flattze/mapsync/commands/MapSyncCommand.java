@@ -4,6 +4,7 @@ import de.flattze.mapsync.MapSyncPlugin;
 import de.flattze.mapsync.data.MapRecord;
 import de.flattze.mapsync.extractor.MapExtractor;
 import de.flattze.mapsync.renderer.CustomMapRenderer;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -47,6 +48,13 @@ public class MapSyncCommand implements CommandExecutor, TabCompleter {
                     player.sendMessage("§cDu musst eine FILLED_MAP in der Hand halten!");
                     return true;
                 }
+
+                player.sendMessage("§7[MapSync] Speichere alle Welten ...");
+                Bukkit.getServer().savePlayers();
+                Bukkit.getWorlds().forEach(world -> {
+                    world.save();
+                });
+                player.sendMessage("§7[MapSync] Extrahiere Kartendaten ...");
 
                 MapMeta meta = (MapMeta) item.getItemMeta();
                 MapView view = meta.getMapView();
