@@ -2,8 +2,6 @@ package de.flattze.mapsync.listeners;
 
 import de.flattze.mapsync.MapSyncPlugin;
 import de.flattze.mapsync.data.MapRecord;
-import de.flattze.mapsync.renderer.CustomMapRenderer;
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -12,8 +10,6 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.MapMeta;
-import org.bukkit.map.MapView;
 
 public class MapListener implements Listener {
 
@@ -31,14 +27,11 @@ public class MapListener implements Listener {
         if (!title.startsWith("§7Meine Karten")) return;
 
         Inventory clickedInv = event.getClickedInventory();
-        if (clickedInv == null) return;
-
-        boolean clickInMenu = clickedInv.equals(event.getView().getTopInventory());
-        if (clickInMenu) {
-            event.setCancelled(true);
-        } else {
+        if (clickedInv == null || !clickedInv.equals(event.getView().getTopInventory())) {
             return;
         }
+
+        event.setCancelled(true);
 
         ItemStack clicked = event.getCurrentItem();
         if (clicked == null || clicked.getType() == Material.AIR) return;
@@ -63,7 +56,6 @@ public class MapListener implements Listener {
         if (clicked.getType() == Material.FILLED_MAP) {
             int mapId = Integer.parseInt(clicked.getItemMeta().getDisplayName().replace("§aKarte ID: ", ""));
             MapRecord record = plugin.getDatabaseManager().getMapById(mapId);
-
             if (record != null) {
                 plugin.getGuiManager().giveMapToPlayer(player, record);
                 player.sendMessage("§aKarte " + mapId + " wurde deinem Inventar hinzugefügt.");
@@ -76,7 +68,7 @@ public class MapListener implements Listener {
 
     @EventHandler
     public void onInventoryDrag(InventoryDragEvent event) {
-        if (!(event.getWhoClicked() instanceof Player player)) return;
+        if (!(event.getWhoClicked() instanceof Player)) return;
 
         String title = event.getView().getTitle();
         if (!title.startsWith("§7Meine Karten")) return;

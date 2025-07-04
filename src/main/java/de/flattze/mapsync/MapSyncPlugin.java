@@ -20,7 +20,6 @@ public class MapSyncPlugin extends JavaPlugin {
 
         this.databaseManager = new DatabaseManager(this);
         this.databaseManager.connect();
-        this.databaseManager.ensureTableExists();
 
         this.guiManager = new MapGUIManager(this);
         this.mapExtractor = new MapExtractor();

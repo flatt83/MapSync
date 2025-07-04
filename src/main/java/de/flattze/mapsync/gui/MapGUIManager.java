@@ -24,32 +24,23 @@ public class MapGUIManager {
 
     public void openOwnedMaps(Player player, int page) {
         List<MapRecord> records = plugin.getDatabaseManager().getMapsFor(player.getUniqueId());
-
-        if (records.isEmpty()) {
-            player.sendMessage("§cDu hast noch keine gespeicherten Karten!");
-            return;
-        }
-
         int itemsPerPage = 45;
         int maxPage = Math.max(1, (int) Math.ceil((double) records.size() / itemsPerPage));
-
         if (page < 1) page = 1;
         if (page > maxPage) page = maxPage;
 
-        int startIndex = Math.max(0, (page - 1) * itemsPerPage);
-        int endIndex = Math.min(startIndex + itemsPerPage, records.size());
-
         Inventory inv = Bukkit.createInventory(null, 54, "§7Meine Karten - Seite " + page);
+
+        int startIndex = (page - 1) * itemsPerPage;
+        int endIndex = Math.min(startIndex + itemsPerPage, records.size());
 
         int slot = 0;
         for (int i = startIndex; i < endIndex; i++) {
             MapRecord record = records.get(i);
-
             ItemStack mapItem = new ItemStack(Material.FILLED_MAP);
             ItemMeta meta = mapItem.getItemMeta();
             meta.setDisplayName("§aKarte ID: " + record.mapId());
             mapItem.setItemMeta(meta);
-
             inv.setItem(slot++, mapItem);
         }
 
@@ -85,10 +76,10 @@ public class MapGUIManager {
         ItemStack mapItem = new ItemStack(Material.FILLED_MAP);
         MapMeta meta = (MapMeta) mapItem.getItemMeta();
         meta.setMapView(view);
-        meta.setDisplayName("§aKarte ID: " + record.mapId());
+        meta.setDisplayName("§aKopie von Karte " + record.mapId());
         mapItem.setItemMeta(meta);
 
         player.getInventory().addItem(mapItem);
     }
-
 }
+

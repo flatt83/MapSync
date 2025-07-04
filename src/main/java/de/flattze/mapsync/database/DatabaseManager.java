@@ -11,50 +11,54 @@ import java.util.UUID;
 public class DatabaseManager {
 
     private final MapSyncPlugin plugin;
-
-    private String host;
-    private int port;
-    private String database;
-    private String username;
-    private String password;
+    private Connection connection;
 
     public DatabaseManager(MapSyncPlugin plugin) {
         this.plugin = plugin;
     }
 
     public void connect() {
-        host = plugin.getConfig().getString("database.host");
-        port = plugin.getConfig().getInt("database.port");
-        database = plugin.getConfig().getString("database.database");
-        username = plugin.getConfig().getString("database.username");
-        password = plugin.getConfig().getString("database.password");
-        plugin.getLogger().info("[MapSync] DB-Config geladen.");
-    }
+        String host = plugin.getConfig().getString("database.host");
+        int port = plugin.getConfig().getInt("database.port");
+        String db = plugin.getConfig().getString("database.database");
+        String user = plugin.getConfig().getString("database.username");
+        String pass = plugin.getConfig().getString("database.password");
 
-    public Connection getConnection() throws SQLException {
-        String url = "jdbc:mysql://" + host + ":" + port + "/" + database +
-                "?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
-        return DriverManager.getConnection(url, username, password);
-    }
+        try {
+            connection = DriverManager.getConnection(
+                    "jdbc:mysql://" + host + ":" + port + "/" + db + "?useSSL=false",
+                    user, pass
+            );
 
-    public void ensureTableExists() {
-        try (Connection conn = getConnection()) {
-            PreparedStatement stmt = conn.prepareStatement(
+            Statement stmt = connection.createStatement();
+            stmt.executeUpdate(
                     "CREATE TABLE IF NOT EXISTS mapsync_maps (" +
                             "map_id INT PRIMARY KEY," +
-                            "owner_uuid VARCHAR(36) NOT NULL," +
-                            "owner_name VARCHAR(64) NOT NULL," +
-                            "dimension VARCHAR(32) NOT NULL," +
-                            "scale INT NOT NULL," +
-                            "center_x INT NOT NULL," +
-                            "center_z INT NOT NULL," +
-                            "locked BOOLEAN NOT NULL," +
-                            "tracking BOOLEAN NOT NULL," +
-                            "map_data BLOB NOT NULL" +
-                            ")"
+                            "owner_uuid VARCHAR(36)," +
+                            "owner_name VARCHAR(100)," +
+                            "dimension VARCHAR(50)," +
+                            "scale INT," +
+                            "center_x INT," +
+                            "center_z INT," +
+                            "locked BOOLEAN," +
+                            "tracking BOOLEAN," +
+                            "map_data LONGBLOB" +
+                            ");"
             );
-            stmt.execute();
-            plugin.getLogger().info("[MapSync] Tabelle geprüft/erstellt.");
+
+            plugin.getLogger().info("[MapSync] Datenbank verbunden!");
+
+        } catch (SQLException e) {
+            plugin.getLogger().severe("[MapSync] DB-Verbindung fehlgeschlagen: " + e.getMessage());
+        }
+    }
+
+    public void disconnect() {
+        try {
+            if (connection != null && !connection.isClosed()) {
+                connection.close();
+                plugin.getLogger().info("[MapSync] Datenbank getrennt.");
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -65,12 +69,10 @@ public class DatabaseManager {
             throw new IllegalArgumentException("Farben müssen 16384 Bytes sein!");
         }
 
-        try (Connection conn = getConnection()) {
-            PreparedStatement stmt = conn.prepareStatement(
-                    "REPLACE INTO mapsync_maps " +
-                            "(map_id, owner_uuid, owner_name, dimension, scale, center_x, center_z, locked, tracking, map_data) " +
-                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-            );
+        try (PreparedStatement stmt = connection.prepareStatement(
+                "REPLACE INTO mapsync_maps (map_id, owner_uuid, owner_name, dimension, scale, center_x, center_z, locked, tracking, map_data) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        )) {
             stmt.setInt(1, record.mapId());
             stmt.setString(2, record.owner().toString());
             stmt.setString(3, record.ownerName());
@@ -87,12 +89,10 @@ public class DatabaseManager {
         }
     }
 
-
     public MapRecord getMapById(int mapId) {
-        try (Connection conn = getConnection()) {
-            PreparedStatement stmt = conn.prepareStatement(
-                    "SELECT * FROM mapsync_maps WHERE map_id = ?"
-            );
+        try (PreparedStatement stmt = connection.prepareStatement(
+                "SELECT * FROM mapsync_maps WHERE map_id = ?"
+        )) {
             stmt.setInt(1, mapId);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
@@ -115,14 +115,12 @@ public class DatabaseManager {
         return null;
     }
 
-
-    public List<MapRecord> getMapsFor(UUID owner) {
+    public List<MapRecord> getMapsFor(UUID uuid) {
         List<MapRecord> list = new ArrayList<>();
-        try (Connection conn = getConnection()) {
-            PreparedStatement stmt = conn.prepareStatement(
-                    "SELECT * FROM mapsync_maps WHERE owner_uuid = ?"
-            );
-            stmt.setString(1, owner.toString());
+        try (PreparedStatement stmt = connection.prepareStatement(
+                "SELECT * FROM mapsync_maps WHERE owner_uuid = ?"
+        )) {
+            stmt.setString(1, uuid.toString());
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
                 list.add(new MapRecord(
@@ -143,4 +141,5 @@ public class DatabaseManager {
         }
         return list;
     }
+
 }
