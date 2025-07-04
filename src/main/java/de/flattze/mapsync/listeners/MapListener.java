@@ -34,8 +34,11 @@ public class MapListener implements Listener {
         if (clickedInv == null) return;
 
         boolean clickInMenu = clickedInv.equals(event.getView().getTopInventory());
-        if (clickInMenu) event.setCancelled(true);
-        else return;
+        if (clickInMenu) {
+            event.setCancelled(true);
+        } else {
+            return;
+        }
 
         ItemStack clicked = event.getCurrentItem();
         if (clicked == null || clicked.getType() == Material.AIR) return;
@@ -58,41 +61,16 @@ public class MapListener implements Listener {
         }
 
         if (clicked.getType() == Material.FILLED_MAP) {
-            int mapId;
-            try {
-                mapId = Integer.parseInt(clicked.getItemMeta().getDisplayName().replace("§aKarte ID: ", ""));
-            } catch (NumberFormatException e) {
-                player.sendMessage("§cUngültige Karten-ID.");
-                return;
-            }
-
+            int mapId = Integer.parseInt(clicked.getItemMeta().getDisplayName().replace("§aKarte ID: ", ""));
             MapRecord record = plugin.getDatabaseManager().getMapById(mapId);
-            if (record == null) {
+
+            if (record != null) {
+                plugin.getGuiManager().giveMapToPlayer(player, record);
+                player.sendMessage("§aKarte " + mapId + " wurde deinem Inventar hinzugefügt.");
+                player.closeInventory();
+            } else {
                 player.sendMessage("§cKarte nicht gefunden!");
-                return;
             }
-
-            if (player.getInventory().firstEmpty() == -1) {
-                player.sendMessage("§cDein Inventar ist voll!");
-                return;
-            }
-
-            // Neues MapView + Renderer
-            MapView view = Bukkit.createMap(player.getWorld());
-            view.getRenderers().clear();
-            view.addRenderer(new CustomMapRenderer(record.mapData()));
-            view.setTrackingPosition(false);
-            view.setLocked(true);
-
-            ItemStack newMap = new ItemStack(Material.FILLED_MAP);
-            MapMeta meta = (MapMeta) newMap.getItemMeta();
-            meta.setDisplayName("§aKopie von Karte " + mapId);
-            meta.setMapView(view);
-            newMap.setItemMeta(meta);
-
-            player.getInventory().addItem(newMap);
-            player.sendMessage("§aKarte wurde deinem Inventar hinzugefügt!");
-            player.closeInventory();
         }
     }
 

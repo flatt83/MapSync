@@ -28,17 +28,11 @@ public class MapSyncPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new MapListener(this), this);
 
         getCommand("mapsync").setExecutor(new MapSyncCommand(this));
+        getCommand("mapsync").setTabCompleter(new MapSyncCommand(this));
 
         getLogger().info("MapSync gestartet!");
     }
 
-
-    @Override
-    public void onDisable() {
-        if (databaseManager != null) {
-            databaseManager.disconnect();
-        }
-    }
 
     public DatabaseManager getDatabaseManager() {
         return databaseManager;

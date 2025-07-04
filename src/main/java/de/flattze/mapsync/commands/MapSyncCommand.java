@@ -8,13 +8,17 @@ import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.MapMeta;
 import org.bukkit.map.MapRenderer;
 import org.bukkit.map.MapView;
 
-public class MapSyncCommand implements CommandExecutor {
+import java.util.List;
+import java.util.ArrayList;
+
+public class MapSyncCommand implements CommandExecutor, TabCompleter {
 
     private final MapSyncPlugin plugin;
 
@@ -101,4 +105,24 @@ public class MapSyncCommand implements CommandExecutor {
 
         return true;
     }
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        List<String> completions = new ArrayList<>();
+
+        if (args.length == 1) {
+            List<String> subCommands = new ArrayList<>();
+            subCommands.add("upload");
+            subCommands.add("mymaps");
+
+            for (String sub : subCommands) {
+                if (sub.toLowerCase().startsWith(args[0].toLowerCase())) {
+                    completions.add(sub);
+                }
+            }
+        }
+
+        return completions;
+    }
+
 }
